@@ -1,0 +1,164 @@
+﻿@model IEnumerable<task4.Models.Message> 
+
+@{
+    var user = ViewBag.User as task4.Models.User;
+}
+
+<h2>Welcome, @user.FullName</h2>
+
+<h3>Your Messages</h3>
+<table>
+    <thead>
+        <tr>
+            <th>From</th>
+            <th>Title</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var message in Model)
+        {
+            <tr>
+                <td>@message.From</td>
+                <td><a href="#" onclick="showMessage(@message.Id)">@message.Title</a></td>
+                <td>@message.SendDate</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Send a Message</h3>
+<form asp-action="SendMessage" method="post">
+    <input type="hidden" name="userId" value="@user.Id" />
+    <div>
+        <label>To</label>
+        <input name="to" />
+    </div>
+    <div>
+        <label>Title</label>
+        <input name="title" />
+    </div>
+    <div>
+        <label>Text</label>
+        <textarea name="text"></textarea>
+    </div>
+    <button type="submit">Send</button>
+</form>
+
+<script>
+    function showMessage(id) {
+        // Implement modal to show message text by ID
+    }
+</script>
+
+@* @model IEnumerable<Message> *@
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>От</th>
+        <th>Тема</th>
+        <th>Дата отправки</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var message in Model)
+    {
+        <tr class="message-row" data-isread="@message.IsRead">
+            <td>@message.From</td>
+            <td>
+                <a href="#" class="message-link" data-message-id="@message.Id">@message.Title</a>
+            </td>
+            <td>@message.SendDate.ToString("g")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Сообщение</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="messageText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(".message-link").click(function (e) {
+                e.preventDefault();
+                var messageId = $(this).data("message-id");
+                
+                $.get('@Url.Action("GetMessageText", "Home")', { id: messageId }, function (data) {
+                    $("#messageText").text(data);
+                    $("#messageModal").modal("show");
+                });
+            });
+
+            $(".message-row").each(function() {
+                if ($(this).data("isread") == "False") {
+                    $(this).css("background-color", "yellow"); // Любой цвет на ваше усмотрение
+                }
+            });
+        });
+    </script>
+}
+
+@{
+    string isReadAllSelected = ViewData["isRead"]?.ToString() == "all" ? "selected" : "";
+    string isReadUnreadSelected = ViewData["isRead"]?.ToString() == "unread" ? "selected" : "";
+}
+
+<form method="get" action="@Url.Action("MessageBoard", "Home")">
+    <div class="form-group">
+        <label for="sender">Отправитель</label>
+        <input type="text" id="sender" name="sender" class="form-control" value="@ViewData["sender"]">
+    </div>
+    <div class="form-group">
+        <label for="fromDate">Дата отправки (от)</label>
+        <input type="date" id="fromDate" name="fromDate" class="form-control" value="@ViewData["fromDate"]">
+    </div>
+    <div class="form-group">
+        <label for="toDate">Дата отправки (до)</label>
+        <input type="date" id="toDate" name="toDate" class="form-control" value="@ViewData["toDate"]">
+    </div>
+    <div class="form-group">
+        <label for="isRead">Статус</label>
+        <select id="isRead" name="isRead" class="form-control">
+            <!option value="all" @(isReadAllSelected)>Все</!option>
+            <!option value="unread" @(isReadUnreadSelected)>Непрочитанные</!option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Применить</button>
+</form>
+
+@* <table class="table"> *@
+@*     <!-- ... таблица сообщений ... --> *@
+@* </table> *@
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>От</th>
+        <th>Тема</th>
+        <th><a href="@Url.Action("MessageBoard", new { sortOrder = ViewBag.DateSortParm })">Дата отправки</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- ... -->
+    </tbody>
+</table>
