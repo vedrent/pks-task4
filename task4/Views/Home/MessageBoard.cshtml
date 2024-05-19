@@ -1,10 +1,16 @@
-﻿@model IEnumerable<task4.Models.Message> 
-
+﻿@model IEnumerable<task4.Models.Message>
 @{
     var user = ViewBag.User as task4.Models.User;
 }
 
 <h2>Welcome, @user.FullName</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
 
 <h3>Your Messages</h3>
 <table>
@@ -18,10 +24,10 @@
     <tbody>
         @foreach (var message in Model)
         {
-            <tr>
+            <tr class="@(message.IsRead ? "" : "unread-message")">
                 <td>@message.From</td>
-                <td><a href="#" onclick="showMessage(@message.Id)">@message.Title</a></td>
-                <td>@message.SendDate</td>
+                <td><a href="#" class="message-link" data-message-id="@message.Id">@message.Title</a></td>
+                <td>@message.SendDate.ToLocalTime()</td>
             </tr>
         }
     </tbody>
@@ -46,34 +52,48 @@
 </form>
 
 <script>
-    function showMessage(id) {
-        // Implement modal to show message text by ID
-    }
+    $(document).ready(function () {
+        $(".message-link").click(function (e) {
+            e.preventDefault();
+            var messageId = $(this).data("message-id");
+            
+            $.get('@Url.Action("GetMessageText", "Home")', { id: messageId }, function (data) {
+                $("#messageText").text(data);
+                $("#messageModal").modal("show");
+                $.post('@Url.Action("MarkAsRead", "Home")', { id: messageId });
+            });
+        });
+    });
 </script>
 
-@* @model IEnumerable<Message> *@
+@{
+    string isReadAllSelected = ViewData["isRead"]?.ToString() == "all" ? "selected" : "";
+    string isReadUnreadSelected = ViewData["isRead"]?.ToString() == "unread" ? "selected" : "";
+}
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>От</th>
-        <th>Тема</th>
-        <th>Дата отправки</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var message in Model)
-    {
-        <tr class="message-row" data-isread="@message.IsRead">
-            <td>@message.From</td>
-            <td>
-                <a href="#" class="message-link" data-message-id="@message.Id">@message.Title</a>
-            </td>
-            <td>@message.SendDate.ToString("g")</td>
-        </tr>
-    }
-    </tbody>
-</table>
+<form method="get" action="@Url.Action("MessageBoard", "Home")">
+    <input type="hidden" name="userId" value="@user.Id" />
+    <div class="form-group">
+        <label for="sender">Отправитель</label>
+        <input type="text" id="sender" name="sender" class="form-control" value="@ViewData["sender"]">
+    </div>
+    <div class="form-group">
+        <label for="fromDate">Дата отправки (от)</label>
+        <input type="date" id="fromDate" name="fromDate" class="form-control" value="@ViewData["fromDate"]">
+    </div>
+    <div class="form-group">
+        <label for="toDate">Дата отправки (до)</label>
+        <input type="date" id="toDate" name="toDate" class="form-control" value="@ViewData["toDate"]">
+    </div>
+    <div class="form-group">
+        <label for="isRead">Статус</label>
+        <select id="isRead" name="isRead" class="form-control">
+            <!option value="all" @isReadAllSelected>Все</!option>
+            <!option value="unread" @isReadUnreadSelected>Непрочитанные</!option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Применить</button>
+</form>
 
 <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -94,11 +114,11 @@
     </div>
 </div>
 
-
-
 @section Scripts {
     <script>
         $(document).ready(function () {
+            $(".unread-message").css("background-color", "yellow");
+
             $(".message-link").click(function (e) {
                 e.preventDefault();
                 var messageId = $(this).data("message-id");
@@ -108,57 +128,6 @@
                     $("#messageModal").modal("show");
                 });
             });
-
-            $(".message-row").each(function() {
-                if ($(this).data("isread") == "False") {
-                    $(this).css("background-color", "yellow"); // Любой цвет на ваше усмотрение
-                }
-            });
         });
     </script>
 }
-
-@{
-    string isReadAllSelected = ViewData["isRead"]?.ToString() == "all" ? "selected" : "";
-    string isReadUnreadSelected = ViewData["isRead"]?.ToString() == "unread" ? "selected" : "";
-}
-
-<form method="get" action="@Url.Action("MessageBoard", "Home")">
-    <div class="form-group">
-        <label for="sender">Отправитель</label>
-        <input type="text" id="sender" name="sender" class="form-control" value="@ViewData["sender"]">
-    </div>
-    <div class="form-group">
-        <label for="fromDate">Дата отправки (от)</label>
-        <input type="date" id="fromDate" name="fromDate" class="form-control" value="@ViewData["fromDate"]">
-    </div>
-    <div class="form-group">
-        <label for="toDate">Дата отправки (до)</label>
-        <input type="date" id="toDate" name="toDate" class="form-control" value="@ViewData["toDate"]">
-    </div>
-    <div class="form-group">
-        <label for="isRead">Статус</label>
-        <select id="isRead" name="isRead" class="form-control">
-            <!option value="all" @(isReadAllSelected)>Все</!option>
-            <!option value="unread" @(isReadUnreadSelected)>Непрочитанные</!option>
-        </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Применить</button>
-</form>
-
-@* <table class="table"> *@
-@*     <!-- ... таблица сообщений ... --> *@
-@* </table> *@
-
-<table class="table">
-    <thead>
-    <tr>
-        <th>От</th>
-        <th>Тема</th>
-        <th><a href="@Url.Action("MessageBoard", new { sortOrder = ViewBag.DateSortParm })">Дата отправки</a></th>
-    </tr>
-    </thead>
-    <tbody>
-    <!-- ... -->
-    </tbody>
-</table>

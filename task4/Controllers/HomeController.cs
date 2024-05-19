@@ -14,14 +14,19 @@ namespace task4.Controllers
         {
             _context = context;
         }
-        
-        [HttpGet("MessageBoard/Filter")]
-        public IActionResult MessageBoard(string sender, DateTime? fromDate, DateTime? toDate, string isRead, string sortOrder)
+
+        [HttpGet("MessageBoard")]
+        public IActionResult MessageBoard(int userId, string sender, DateTime? fromDate, DateTime? toDate, string isRead, string sortOrder)
         {
+            var user = _context.Users.Find(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
             ViewBag.DateSortParm = String.IsNullOrEmpty(sortOrder) ? "date_desc" : "";
 
-            var messages = from m in _context.Messages
-                select m;
+            var messages = _context.Messages.Where(m => m.To == user.Login);
 
             if (!String.IsNullOrEmpty(sender))
             {
@@ -30,12 +35,12 @@ namespace task4.Controllers
 
             if (fromDate.HasValue)
             {
-                messages = messages.Where(m => m.SendDate >= fromDate.Value);
+                messages = messages.Where(m => m.SendDate >= DateTime.SpecifyKind(fromDate.Value, DateTimeKind.Utc));
             }
 
             if (toDate.HasValue)
             {
-                messages = messages.Where(m => m.SendDate <= toDate.Value);
+                messages = messages.Where(m => m.SendDate <= DateTime.SpecifyKind(toDate.Value, DateTimeKind.Utc));
             }
 
             if (isRead == "unread")
@@ -57,6 +62,7 @@ namespace task4.Controllers
             ViewData["fromDate"] = fromDate?.ToString("yyyy-MM-dd");
             ViewData["toDate"] = toDate?.ToString("yyyy-MM-dd");
             ViewData["isRead"] = isRead;
+            ViewBag.User = user;
 
             return View(messages.ToList());
         }
@@ -69,8 +75,31 @@ namespace task4.Controllers
             {
                 return NotFound();
             }
+            
+            if (!message.IsRead)
+            {
+                message.IsRead = true;
+                _context.Messages.Update(message);
+                _context.SaveChanges();
+            }
 
             return Content(message.Text);
+        }
+        
+        [HttpPost]
+        public IActionResult MarkAsRead(int id)
+        {
+            var message = _context.Messages.Find(id);
+            if (message == null)
+            {
+                return NotFound();
+            }
+
+            message.IsRead = true;
+            _context.Messages.Update(message);
+            _context.SaveChanges();
+
+            return Ok();
         }
 
         public IActionResult Index()
@@ -113,20 +142,6 @@ namespace task4.Controllers
             return View();
         }
 
-        [HttpGet("MessageBoard/User/{userId}")]
-        public IActionResult MessageBoard(int userId)
-        {
-            var user = _context.Users.Find(userId);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            var messages = _context.Messages.Where(m => m.To == user.Login).ToList();
-            ViewBag.User = user;
-            ViewBag.Messages = messages;
-            return View(messages);
-        }
-
         [HttpPost]
         public IActionResult SendMessage(int userId, string to, string title, string text)
         {
@@ -139,7 +154,7 @@ namespace task4.Controllers
             var recipient = _context.Users.FirstOrDefault(u => u.Login == to);
             if (recipient == null)
             {
-                ViewBag.Error = "Recipient not found.";
+                TempData["ErrorMessage"] = "Recipient not found.";
                 return RedirectToAction("MessageBoard", new { userId = userId });
             }
 
@@ -149,7 +164,7 @@ namespace task4.Controllers
                 To = to,
                 Title = title,
                 Text = text,
-                SendDate = DateTime.Now,
+                SendDate = DateTime.UtcNow,
                 IsRead = false
             };
 

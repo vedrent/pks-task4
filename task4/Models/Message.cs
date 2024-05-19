@@ -19,12 +19,13 @@ namespace task4.Models
         [Required]
         public string Text { get; set; }
 
-        private DateTime _sendDate;
-        public DateTime SendDate
-        {
-            get => _sendDate;
-            set => _sendDate = DateTime.SpecifyKind(value, DateTimeKind.Utc);
-        }
+        // private DateTime _sendDate;
+        // public DateTime SendDate
+        // {
+        //     get => _sendDate;
+        //     set => _sendDate = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+        // }
+        public DateTime SendDate { get; set; }
 
         public bool IsRead { get; set; }
     }
