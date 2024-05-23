@@ -1,19 +1,45 @@
 ﻿@model task4.Models.User
 
-<h2>Register</h2>
+@{
+    ViewData["Title"] = "Регистрация";
+}
 
-<form asp-action="Register" method="post">
-    <div>
-        <label>Login</label>
-        <input asp-for="Login" />
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - MyApplication</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .register-form {
+            width: 300px;
+            margin: 50px auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-form">
+            <h2 class="text-center">Регистрация</h2>
+            <form method="post" action="@Url.Action("Register", "Home")">
+                <div class="form-group">
+                    <label for="fullName">ФИО</label>
+                    <input type="text" id="fullName" name="FullName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="login">Логин</label>
+                    <input type="text" id="login" name="Login" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="Password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Зарегистрироваться</button>
+            </form>
+        </div>
     </div>
-    <div>
-        <label>Password</label>
-        <input asp-for="Password" type="password" />
-    </div>
-    <div>
-        <label>Full Name</label>
-        <input asp-for="FullName" />
-    </div>
-    <button type="submit">Save</button>
-</form>
+</body>
+</html>

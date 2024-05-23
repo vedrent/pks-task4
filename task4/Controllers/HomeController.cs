@@ -90,15 +90,11 @@ namespace task4.Controllers
         public IActionResult MarkAsRead(int id)
         {
             var message = _context.Messages.Find(id);
-            if (message == null)
+            if (message != null && !message.IsRead)
             {
-                return NotFound();
+                message.IsRead = true;
+                _context.SaveChanges();
             }
-
-            message.IsRead = true;
-            _context.Messages.Update(message);
-            _context.SaveChanges();
-
             return Ok();
         }
 
@@ -154,7 +150,7 @@ namespace task4.Controllers
             var recipient = _context.Users.FirstOrDefault(u => u.Login == to);
             if (recipient == null)
             {
-                TempData["ErrorMessage"] = "Recipient not found.";
+                TempData["ErrorMessage"] = "Пользователь не найден.";
                 return RedirectToAction("MessageBoard", new { userId = userId });
             }
 

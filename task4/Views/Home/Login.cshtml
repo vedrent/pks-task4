@@ -1,22 +1,45 @@
 ﻿@{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Вход";
 }
 
-<h2>Login</h2>
-
-<form asp-action="Login" method="post">
-    <div>
-        <label>Login</label>
-        <input name="login" />
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - MyApplication</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .login-form {
+            width: 300px;
+            margin: 50px auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-form">
+        <h2 class="text-center">Вход</h2>
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                @ViewBag.Error
+            </div>
+        }
+        <form method="post" action="@Url.Action("Login", "Home")">
+            <div class="form-group">
+                <label for="login">Логин</label>
+                <input type="text" id="login" name="login" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Войти</button>
+        </form>
     </div>
-    <div>
-        <label>Password</label>
-        <input name="password" type="password" />
-    </div>
-    <button type="submit">Login</button>
-</form>
-
-@if (ViewBag.Error != null)
-{
-    <p>@ViewBag.Error</p>
-}
+</div>
+</body>
+</html>
